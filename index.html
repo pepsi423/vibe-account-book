@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简易记账本</title>
+    <style>
+        * {box-sizing: border-box;font-family: system-ui;}
+        body {max-width: 520px;margin: 30px auto;padding: 0 20px;}
+        .balance {font-size: 24px;font-weight: bold;margin-bottom:16px;}
+        .income {color:#23a55a;}
+        .expense {color:#e53935;}
+        .input-area {display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+        input,select,button {padding:8px;font-size:15px;}
+        .item {display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;}
+    </style>
+</head>
+<body>
+    <h2>个人简易记账本</h2>
+    <div class="balance">当前余额：<span id="balance">0.00</span> 元</div>
+    <div class="input-area">
+        <input type="number" id="money" placeholder="金额" step="0.01">
+        <select id="type">
+            <option value="income">收入</option>
+            <option value="expense">支出</option>
+        </select>
+        <input type="text" id="remark" placeholder="备注">
+        <button onclick="addRecord()">添加</button>
+    </div>
+    <div id="list"></div>
+
+    <script>
+        let records = JSON.parse(localStorage.getItem('bookRecords')) || [];
+        render();
+        function addRecord(){
+            const money = Number(document.getElementById('money').value);
+            const type = document.getElementById('type').value;
+            const remark = document.getElementById('remark').value.trim();
+            if(!money) return alert('请输入金额');
+            records.push({money,type,remark,time:new Date().toLocaleString()});
+            save();render();
+            document.getElementById('money').value='';document.getElementById('remark').value='';
+        }
+        function render(){
+            let total = 0;
+            let html = '';
+            records.forEach((r,i)=>{
+                if(r.type==='income') total += r.money;
+                else total -= r.money;
+                const color = r.type==='income'?'income':'expense';
+                html += `<div class="item">
+                    <span>${r.time}｜${r.remark}</span>
+                    <span class="${color}">${r.type==='income'?'+':'-'}${r.money.toFixed(2)}</span>
+                    <button onclick="del(${i})">删除</button>
+                </div>`
+            })
+            document.getElementById('balance').innerText = total.toFixed(2);
+            document.getElementById('list').innerHTML = html;
+        }
+        function del(idx){
+            records.splice(idx,1);save();render();
+        }
+        function save(){
+            localStorage.setItem('bookRecords',JSON.stringify(records));
+        }
+    </script>
+</body>
+</html>
